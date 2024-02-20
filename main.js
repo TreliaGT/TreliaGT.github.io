@@ -6,7 +6,8 @@ import * as THREE from 'three';
 			let scene, renderer, camera;
 			let model, skeleton, clock , animationMixer;
             let controls;
-
+		
+	
 			init();
 
 			function init() {
@@ -57,18 +58,18 @@ import * as THREE from 'three';
                         if (object.isMesh) object.castShadow = true;
                     });
 
-					model.traverse(function (object) {
-						if (object.isBone) {
-							console.log('Bone Name:', object.name);
-						}
-					});
+					// model.traverse(function (object) {
+					// 	if (object.isBone) {
+					// 		console.log('Bone Name:', object.name);
+					// 	}
+					// });
                 
                     skeleton = new THREE.SkeletonHelper(model);
                     skeleton.visible = false;
                     scene.add(skeleton);
                     
                     // Play FBX animation over the GLB model
-                    playFBXAnimation();
+                     playFBXAnimation();
 
 					loader.load('assets/models/phone.glb', function (phoneModel) {
 						const phone = phoneModel.scene;
@@ -126,7 +127,72 @@ import * as THREE from 'three';
                 });
             }
 
-            
+		// Function to play falling animation
+		function playFallingAnimation(){
+			// Model is loaded, continue with animation
+			const fbxLoader = new FBXLoader();
+			fbxLoader.load('assets/animations/Falling.fbx', function (object) {
+				const mixer = new THREE.AnimationMixer(model);
+				const animationAction = mixer.clipAction(object.animations[0]);
+				animationAction.play();
+
+				animationMixer = mixer;
+			});
+		}
+
+
+		function playIDEAnimation(){
+			// Model is loaded, continue with animation
+			const fbxLoader = new FBXLoader();
+			fbxLoader.load('assets/animations/Standing Idle.fbx', function (object) {
+				const mixer = new THREE.AnimationMixer(model);
+				const animationAction = mixer.clipAction(object.animations[0]);
+				animationAction.play();
+
+				animationMixer = mixer;
+			});
+		}
+
+		const sections = document.querySelectorAll('section');
+
+		// Options for the Intersection Observer
+		const options = {
+		  root: null, // Use the viewport as the root
+		  rootMargin: '0px', // No margin
+		  threshold: 0.5 // Trigger when half of the section is visible
+		};
+		
+		// Callback function when section intersects with viewport
+		const callback = (entries, observer) => {
+		  entries.forEach(entry => {
+			if (entry.isIntersecting) {
+			  const sectionId = entry.target.id;
+			  switch (sectionId) {
+				case 'Intro':
+				  // Perform animation for intro section
+				  playFBXAnimation();
+				  break;
+				case 'skills':
+					playFallingAnimation();
+					break;
+				case 'contact':
+				  // Perform animation for contact section
+				  playIDEAnimation();
+				  break;
+				// Add cases for other sections as needed
+			  }
+			}
+		  });
+		};
+		
+		// Create a new Intersection Observer
+		const observer = new IntersectionObserver(callback, options);
+		
+		// Observe each section
+		sections.forEach(section => {
+		  observer.observe(section);
+		});
+
 
 			function onWindowResize() {
 				camera.aspect = window.innerWidth / window.innerHeight;
