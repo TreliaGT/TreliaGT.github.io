@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 
-			import Stats from 'three/addons/libs/stats.module.js';
-
 			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
             import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
             import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -50,7 +48,7 @@ import * as THREE from 'three';
 				scene.add( mesh );
 
 				const loader = new GLTFLoader();
-				loader.load( 'assets/character/character.glb', function ( gltf ) {
+				loader.load( 'assets/models/character.glb', function ( gltf ) {
 
                     model = gltf.scene;
 
