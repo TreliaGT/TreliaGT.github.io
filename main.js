@@ -11,41 +11,36 @@ import * as THREE from 'three';
 
 			function init() {
 
-				const container = document.getElementById( 'container' );
+				const container = document.getElementById('container');
 
-				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
-				camera.position.set( 1, 2, - 3 );
-				camera.lookAt( 0, 1, 0 );
-
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100);
+				camera.position.set(-2, 2, -3);
+				camera.lookAt(0, 1, 0);
+			
 				clock = new THREE.Clock();
-
+			
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color( 0xa0a0a0 );
-				scene.fog = new THREE.Fog( 0xa0a0a0, 10, 50 );
-
-				const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x8d8d8d, 3 );
-				hemiLight.position.set( 0, 20, 0 );
-				scene.add( hemiLight );
-
-				const dirLight = new THREE.DirectionalLight( 0xffffff, 3 );
-				dirLight.position.set( - 3, 10, - 10 );
+			
+				const hemiLight = new THREE.HemisphereLight(0xADD8E6, 0xf9f1e3, 3);
+				hemiLight.position.set(0, 20, 0);
+				scene.add(hemiLight);
+			
+				const dirLight = new THREE.DirectionalLight(0xffffff, 3);
+				dirLight.position.set(-3, 10, -10);
 				dirLight.castShadow = true;
 				dirLight.shadow.camera.top = 2;
-				dirLight.shadow.camera.bottom = - 2;
-				dirLight.shadow.camera.left = - 2;
+				dirLight.shadow.camera.bottom = -2;
+				dirLight.shadow.camera.left = -2;
 				dirLight.shadow.camera.right = 2;
 				dirLight.shadow.camera.near = 0.1;
 				dirLight.shadow.camera.far = 40;
-				scene.add( dirLight );
-
-				// scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
-
+				scene.add(dirLight);
+			
 				// ground
-
-				const mesh = new THREE.Mesh( new THREE.PlaneGeometry( 100, 100 ), new THREE.MeshPhongMaterial( { color: 0xcbcbcb, depthWrite: false } ) );
-				mesh.rotation.x = - Math.PI / 2;
+				const mesh = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshPhongMaterial({ color: 0xcbcbcb, depthWrite: false }));
+				mesh.rotation.x = -Math.PI / 2;
 				mesh.receiveShadow = true;
-				scene.add( mesh );
+				scene.add(mesh);
 
 				const loader = new GLTFLoader();
 				loader.load( 'assets/models/character.glb', function ( gltf ) {
@@ -55,12 +50,18 @@ import * as THREE from 'three';
                     // Rotate the model
                     model.rotation.y = Math.PI; // Rotate the model 180 degrees around the y-axis
                     // You can adjust the rotation value as needed
-                
+					model.position.set(-1, -0.5, 0);
                     scene.add(model);
                 
                     model.traverse(function (object) {
                         if (object.isMesh) object.castShadow = true;
                     });
+
+					model.traverse(function (object) {
+						if (object.isBone) {
+							console.log('Bone Name:', object.name);
+						}
+					});
                 
                     skeleton = new THREE.SkeletonHelper(model);
                     skeleton.visible = false;
@@ -69,14 +70,40 @@ import * as THREE from 'three';
                     // Play FBX animation over the GLB model
                     playFBXAnimation();
 
+					loader.load('assets/models/phone.glb', function (phoneModel) {
+						const phone = phoneModel.scene;
+					
+					  // Adjust the position to move the phone more to the left
+						phone.position.set(-0.08, 0.14, 0.17); // Move the phone 0.1 units to the left along the x-axis
+
+						// Adjust the rotation to flip the phone around
+						phone.rotation.set(Math.PI, 0, 0.5); // Flip the phone around 180 degrees along the x-axis
+
+						// Adjust the scale of the phone
+						phone.scale.set(0.04, 0.03, 0.03); // Set scale to 3% of its original size
+
+						// Assuming 'handBone' is the bone in the character's skeleton representing the hand
+						const handBoneName = 'LeftHand';
+						const handBone = skeleton.bones.find(bone => bone.name === handBoneName);
+					
+						if (handBone) {
+							// Make the phone a child of the hand bone
+							handBone.add(phone);
+						} else {
+							console.error("Hand bone not found!");
+						}
+					});
+
 				} );
+				
 
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
 				renderer.shadowMap.enabled = true;
-				container.appendChild( renderer.domElement );
 
+
+				container.appendChild(renderer.domElement);
                 controls = new OrbitControls(camera, renderer.domElement);
                 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
                 controls.dampingFactor = 0.25;
@@ -86,10 +113,11 @@ import * as THREE from 'three';
 				window.addEventListener( 'resize', onWindowResize );
 
             }
+
 			
             function playFBXAnimation() {
                 const fbxLoader = new FBXLoader();
-                fbxLoader.load('assets/animations/Standing Using Touchscreen Tablet.fbx', function (object) {
+                fbxLoader.load('assets/animations/Standing Using Touchscreen Tablet (4).fbx', function (object) {
                     const mixer = new THREE.AnimationMixer(model);
                     const animationAction = mixer.clipAction(object.animations[0]); // Assuming the first animation
                     animationAction.play();
@@ -101,12 +129,9 @@ import * as THREE from 'three';
             
 
 			function onWindowResize() {
-
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
+				renderer.setSize(window.innerWidth, window.innerHeight);
 			}
 
 			function animate() {
