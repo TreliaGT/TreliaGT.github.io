@@ -5,7 +5,7 @@ import * as THREE from 'three';
             import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			let scene, renderer, camera;
 			let model, skeleton, clock , animationMixer;
-            let controls;
+            let controls, mixer;
 		
 	
 			init();
@@ -57,6 +57,8 @@ import * as THREE from 'three';
                     model.traverse(function (object) {
                         if (object.isMesh) object.castShadow = true;
                     });
+
+					mixer = new THREE.AnimationMixer( model );
 
 					// model.traverse(function (object) {
 					// 	if (object.isBone) {
@@ -115,13 +117,23 @@ import * as THREE from 'three';
 
             }
 
+			function playAnimation(animationClip) {
+				if (mixer) {
+					// Stop any currently playing animations
+					mixer.stopAllAction();
+					// Fade out the current animation
+					mixer.clipAction(animationClip).fadeOut(0.1); // Fade out in 0.5 seconds
+				}
+				// Play the new animation after a short delay to allow the fade out to complete
+				setTimeout(() => {
+					mixer.clipAction(animationClip).fadeIn(0.1).play(); // Fade in and play new animation
+				}, 500); // Wait for 0.5 seconds (same duration as fade out)
+			}
 			
             function playFBXAnimation() {
                 const fbxLoader = new FBXLoader();
                 fbxLoader.load('assets/animations/Standing Using Touchscreen Tablet (4).fbx', function (object) {
-                    const mixer = new THREE.AnimationMixer(model);
-                    const animationAction = mixer.clipAction(object.animations[0]); // Assuming the first animation
-                    animationAction.play();
+					playAnimation(object.animations[0]); 
             
                     animationMixer = mixer;
                 });
@@ -132,9 +144,7 @@ import * as THREE from 'three';
 			// Model is loaded, continue with animation
 			const fbxLoader = new FBXLoader();
 			fbxLoader.load('assets/animations/Falling.fbx', function (object) {
-				const mixer = new THREE.AnimationMixer(model);
-				const animationAction = mixer.clipAction(object.animations[0]);
-				animationAction.play();
+				playAnimation(object.animations[0]); 
 
 				animationMixer = mixer;
 			});
@@ -145,9 +155,7 @@ import * as THREE from 'three';
 			// Model is loaded, continue with animation
 			const fbxLoader = new FBXLoader();
 			fbxLoader.load('assets/animations/Standing Idle.fbx', function (object) {
-				const mixer = new THREE.AnimationMixer(model);
-				const animationAction = mixer.clipAction(object.animations[0]);
-				animationAction.play();
+				playAnimation(object.animations[0]); 
 
 				animationMixer = mixer;
 			});
